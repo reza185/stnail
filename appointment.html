@@ -601,7 +601,46 @@
                     }
                 });
                 
-             
+                // ایجاد جدول اگر وجود نداشته باشد (برای تست محلی)
+                async function initializeTable() {
+                    try {
+                        const { data, error } = await supabaseClient
+                            .from('appointments')
+                            .select('*')
+                            .limit(1);
+                        
+                        if (error && error.code === '42P01') {
+                            // جدول وجود ندارد، ایجاد کنیم
+                            const { error: createError } = await supabaseClient
+                                .from('appointments')
+                                .insert([{
+                                    fullname: 'test',
+                                    phone: '09123456789',
+                                    day: 'saturday',
+                                    day_name: 'شنبه',
+                                    time: '09:00',
+                                    date: '1403/01/01',
+                                    created_at: new Date().toISOString()
+                                }]);
+                            
+                            if (createError) throw createError;
+                            
+                            // حالا حذف کنیم
+                            const { error: deleteError } = await supabaseClient
+                                .from('appointments')
+                                .delete()
+                                .neq('fullname', '');
+                                
+                            if (deleteError) throw deleteError;
+                        }
+                    } catch (err) {
+                        console.error('خطا در بررسی/ایجاد جدول:', err);
+                    }
+                }
+                
+                // فراخوانی تابع برای اطمینان از وجود جدول
+                initializeTable();
+            });
         </script>
         
         <!-- اسکریپت Supabase -->
